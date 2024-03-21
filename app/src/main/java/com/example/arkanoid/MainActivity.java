@@ -205,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             if (ball.getRect().bottom == pad.getRect().top){
-                //   ball.reset(screenX, screenY);
+                ball.reset(screenX, screenY);
                 ball.reverseYVelocity();
             }
 
