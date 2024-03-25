@@ -33,6 +33,9 @@ public class Paddle {
     public void setMovementState(int state){
         paddleMoving = state;
     }
+    public void setSpeed(float s){
+        speed = s;
+    }
 
     public void update(long fps){
         if (paddleMoving == LEFT)
@@ -43,7 +46,11 @@ public class Paddle {
         rect.right = x + len;
         if (rect.left < 0){
             rect.left = 0;
-           // paddleMoving = RIGHT;
+            rect.right = len;
+        }
+        else if (rect.right > MainActivity.screenX) {
+            rect.left = MainActivity.screenX - len;
+            rect.right = MainActivity.screenX;
         }
     }
 }

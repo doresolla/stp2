@@ -11,7 +11,7 @@ public class Ball {
     float ballWidth = 15;
     float ballHeight = 15;
 
-    public Ball(int screenX, int screenY){
+    public Ball(){
         xVelocity = 200;
         yVelocity = -400;
         ball = new RectF();

@@ -12,12 +12,14 @@ import android.graphics.RectF;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 public class MainActivity extends AppCompatActivity {
     AppView view;
+    static int screenX, screenY;
 
     @Override
     public boolean supportRequestWindowFeature(int featureId) {
@@ -33,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     class AppView extends SurfaceView implements Runnable{
         Thread gameThread = null;
+        float pad_speed = 1;
         SurfaceHolder holder;
         volatile boolean playing;
         boolean paused = true;
@@ -40,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
         Paint paint;
         long fps;
         private long timeThisFrame;
-        int screenX, screenY;
+
         Paddle pad;
         Ball ball;
         // The score
@@ -62,8 +65,10 @@ public class MainActivity extends AppCompatActivity {
             display.getSize(size);
             screenX = size.x;
             screenY = size.y;
+            Log.d("SCREEN X ", screenX +"");
+            Log.d("SCREEN Y ", screenY+"");
             pad = new Paddle(screenX, screenY);
-            ball = new Ball(screenX, screenY);
+            ball = new Ball();
             createBricksAndRestart();
         }
 
@@ -77,9 +82,10 @@ public class MainActivity extends AppCompatActivity {
 
             // Build a wall of bricks
             numBricks = 0;
+            int[] colors = new int[]{Color.RED, Color.YELLOW, Color.GREEN};
             for (int column = 0; column < 8; column++) {
                 for (int row = 0; row < 3; row++) {
-                    bricks[numBricks] = new Brick(row, column, brickWidth, brickHeight);
+                    bricks[numBricks] = new Brick(row, column, brickWidth, brickHeight,colors[row]);
                     numBricks++;
                 }
             }
@@ -109,13 +115,15 @@ public class MainActivity extends AppCompatActivity {
                 canvas.drawRect(pad.getRect(), paint); //каретка голубого цвета
                 paint.setColor(Color.YELLOW);
                 canvas.drawOval(ball.getRect(), paint); //мяч желтого цвета
-                paint.setColor(Color.argb(255, 249, 129, 0));
+
                 // Draw the bricks if visible
                 for (int i = 0; i < numBricks; i++) {
                     if (bricks[i].getVisibility()) {
+                        paint.setColor(bricks[i].getColor());
                         canvas.drawRect(bricks[i].getRect(), paint);
                     }
                 }
+
                 // Choose the brush color for drawing
                 paint.setColor(Color.argb(255, 255, 255, 255));
                 // Draw the score
@@ -123,8 +131,10 @@ public class MainActivity extends AppCompatActivity {
                 canvas.drawText("Score: " + score + "   Lives: " + lives, 10, 50, paint);
                 // Has the player cleared the screen?
                 if (score == numBricks * 10) {
-                    paint.setTextSize(90);
-                    canvas.drawText("YOU HAVE WON!", 10, screenY / 2, paint);
+                    paint.setTextSize(50);
+                    paint.setColor(Color.BLUE);
+                    canvas.drawText("Победа!", screenX/2, screenY/2, paint);
+                  //1  canvas.drawText("YOU HAVE WON!", 10, screenY / 2, paint);
                 }
                 // Draw everything to the screen
                 holder.unlockCanvasAndPost(canvas);
@@ -162,9 +172,17 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("Debug: ", "Action was UP");
                     pad.setMovementState(pad.STOPPED);
                     break;
+
             }
             return true;
         }
+
+
+        final GestureDetector gestureDetector = new GestureDetector(this.getContext(), new GestureDetector.SimpleOnGestureListener() {
+            public void onLongPress(MotionEvent e) {
+              //  pad.
+            }
+        });
         private void update() {
             pad.update(fps);
             ball.update(fps);
