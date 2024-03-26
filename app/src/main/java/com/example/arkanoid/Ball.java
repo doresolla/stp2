@@ -6,14 +6,17 @@ import java.util.Random;
 
 public class Ball {
     private RectF ball;
+    float[] velocity = new float[2];
     float xVelocity;
     float yVelocity;
     float ballWidth = 15;
     float ballHeight = 15;
 
     public Ball(){
-        xVelocity = 200;
-        yVelocity = -400;
+        velocity[0]= 200;
+        velocity[1] = -400;
+//        xVelocity = 200;
+//        yVelocity = -400;
         ball = new RectF();
     }
 
@@ -27,11 +30,13 @@ public class Ball {
         ball.bottom = ball.top - ballHeight;
     }
     public void reverseXVelocity(){
-        xVelocity = - xVelocity;
+        velocity[0] = -velocity[0];
+  //      xVelocity = - xVelocity;
     }
 
     public void reverseYVelocity(){
-        yVelocity = - yVelocity;
+        velocity[1] = -velocity[1];
+//        yVelocity = - yVelocity;
     }
     public void setRandomXVelocity(){
         Random generator = new Random();
@@ -39,6 +44,11 @@ public class Ball {
         if (answer == 0)
             reverseXVelocity();
     }
+    public void setVelocity(float[] vel){
+        velocity = vel;
+    }
+
+
 
     public void moveY(float y){
         ball.bottom = y;

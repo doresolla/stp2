@@ -10,12 +10,14 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Display;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.ViewConfiguration;
 
 public class MainActivity extends AppCompatActivity {
     AppView view;
@@ -134,7 +136,12 @@ public class MainActivity extends AppCompatActivity {
                     paint.setTextSize(50);
                     paint.setColor(Color.BLUE);
                     canvas.drawText("Победа!", screenX/2, screenY/2, paint);
-                  //1  canvas.drawText("YOU HAVE WON!", 10, screenY / 2, paint);
+                  //  canvas.drawText("YOU HAVE WON!", 10, screenY / 2, paint);
+                }
+                else if (lives == 0){
+                    paint.setTextSize(50);
+                    paint.setColor(Color.BLACK);
+                    canvas.drawText("Проигрыш", screenX/2, screenY/2, paint);
                 }
                 // Draw everything to the screen
                 holder.unlockCanvasAndPost(canvas);
@@ -146,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
             try{
                 gameThread.join();
             } catch (InterruptedException e) {
-                Log.e("Error: ", "joinig thread");
+                Log.e("Error: ", "joining thread");
             }
         }
 
@@ -157,32 +164,54 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @SuppressLint("ClickableViewAccessibility")
+
+        private float mDownX;
+        private float mDownY;
+        private final float SCROLL_THRESHOLD = 10;
+        public boolean isOnClick;
+
         @Override
-        public boolean onTouchEvent(MotionEvent event) {
-            switch (event.getAction() &MotionEvent.ACTION_MASK){
-                case (MotionEvent.ACTION_DOWN):
+        public boolean onTouchEvent(MotionEvent ev ) {
+            switch (ev.getAction() & MotionEvent.ACTION_MASK) {
+                case MotionEvent.ACTION_DOWN:
+                    handler.postDelayed(mLongPressed, ViewConfiguration.getLongPressTimeout());
+                    mDownX = ev.getX();
+                    mDownY = ev.getY();
                     Log.d("Debug: ", "Action was DOWN");
                     paused = false;
-                    if(event.getX() > screenX / 2)
+                    if(ev.getX() > screenX / 2)
                         pad.setMovementState(pad.RIGHT);
                     else
                         pad.setMovementState(pad.LEFT);
                     break;
-                case (MotionEvent.ACTION_UP):
-                    Log.d("Debug: ", "Action was UP");
-                    pad.setMovementState(pad.STOPPED);
+                case MotionEvent.ACTION_CANCEL:
+                case MotionEvent.ACTION_UP:
+                    handler.removeCallbacks(mLongPressed);
+                    if (isOnClick) {
+                        Log.d("event", "onClick ");
+                        pad.setMovementState(pad.STOPPED);
+                    }
                     break;
-
+                case MotionEvent.ACTION_MOVE:
+                    if (isOnClick && (Math.abs(mDownX - ev.getX()) > SCROLL_THRESHOLD || Math.abs(mDownY - ev.getY()) > SCROLL_THRESHOLD)) {
+                        Log.d("event", "movement detected");
+                        isOnClick = false;
+                    }
+                    break;
+                default:
+                    break;
             }
             return true;
         }
 
-
-        final GestureDetector gestureDetector = new GestureDetector(this.getContext(), new GestureDetector.SimpleOnGestureListener() {
-            public void onLongPress(MotionEvent e) {
-              //  pad.
+        final Handler handler = new Handler();
+        Runnable mLongPressed = new Runnable() {
+            public void run() {
+                Log.i("", "Long press!");
+                pad.setSpeed(500);
             }
-        });
+        };
+
         private void update() {
             pad.update(fps);
             ball.update(fps);
@@ -201,6 +230,14 @@ public class MainActivity extends AppCompatActivity {
                 ball.reverseYVelocity();
                 ball.moveY(pad.getRect().top - 2);
             }
+            if (pad.getRect().top == ball.getRect().bottom) {
+                ball.setVelocity();
+                ball.reverseYVelocity();
+                ball.moveY(pad.getRect().top - 2);
+            }
+
+
+
             if (ball.getRect().bottom >= screenY) {
                 lives -= 1;
                 paint.setTextSize(40);
