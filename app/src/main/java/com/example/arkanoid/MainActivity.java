@@ -177,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
                     handler.postDelayed(mLongPressed, ViewConfiguration.getLongPressTimeout());
                     mDownX = ev.getX();
                     mDownY = ev.getY();
+                    isOnClick = true;
                     Log.d("Debug: ", "Action was DOWN");
                     paused = false;
                     if(ev.getX() > screenX / 2)
@@ -215,6 +216,9 @@ public class MainActivity extends AppCompatActivity {
         private void update() {
             pad.update(fps);
             ball.update(fps);
+            int padMov = pad.getMovementState();
+            float[] new_velocity = ball.getVelocity();
+            float[] old_velocity = ball.getVelocity();
 
             for (int i = 0; i < numBricks; i++) {
                 if (bricks[i].getVisibility()) {
@@ -225,15 +229,23 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
+
+
             if (RectF.intersects(pad.getRect(), ball.getRect())) {
                 ball.setRandomXVelocity();
                 ball.reverseYVelocity();
-                ball.moveY(pad.getRect().top - 2);
+                //   TODO ПРОВЕРИТЬ      ball.moveY(pad.getRect().top - 2);
             }
+
             if (pad.getRect().top == ball.getRect().bottom) {
-                ball.setVelocity();
-                ball.reverseYVelocity();
-                ball.moveY(pad.getRect().top - 2);
+                if (padMov == pad.STOPPED){
+                    ball.reverseYVelocity();
+                }
+                else if(padMov == pad.LEFT){
+                    new_velocity[0] = old_velocity[0] - pad.getSpeed();
+                    new_velocity[1] = -new_velocity[1];
+                }
+          //   TODO ПРОВЕРИТЬ     ball.moveY(pad.getRect().top - 2);
             }
 
 
@@ -256,33 +268,33 @@ public class MainActivity extends AppCompatActivity {
                 else{
                     ball.reset(screenX, screenY);
                     ball.reverseYVelocity();
-                    ball.moveY(screenY - 2);
+                    //   TODO ПРОВЕРИТЬ        ball.moveY(screenY - 2);
                 }
             }
             if (ball.getRect().bottom == pad.getRect().top){
-                ball.reset(screenX, screenY);
-                ball.reverseYVelocity();
+//                ball.reset(screenX, screenY);
+//                ball.reverseYVelocity();
             }
 
             // Bounce the ball back when it hits the top of screen
             if (ball.getRect().top < 0)
             {
                 ball.reverseYVelocity();
-                ball.moveY(12);
+                //   TODO ПРОВЕРИТЬ       ball.moveY(12);
             }
 
             // If the ball hits left wall bounce
             if (ball.getRect().left < 0)
             {
                 ball.reverseXVelocity();
-                ball.moveX(2);
+                //   TODO ПРОВЕРИТЬ   ball.moveX(2);
             }
 
             // If the ball hits right wall bounce
             if (ball.getRect().right > screenX - 10) {
 
                 ball.reverseXVelocity();
-                ball.moveX(screenX - 22);
+                //   TODO ПРОВЕРИТЬ         ball.moveX(screenX - 22);
             }
             // Pause if cleared screen
             if (score == numBricks * 10)
@@ -292,6 +304,7 @@ public class MainActivity extends AppCompatActivity {
             }
             if (pad.getRect().right > screenX - 10){
                 pad.setMovementState(pad.LEFT);
+                pad.setMovementState(pad.STOPPED);
             }
             if (pad.getRect().left < 0){
                 pad.setMovementState(pad.RIGHT);

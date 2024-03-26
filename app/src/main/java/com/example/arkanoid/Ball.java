@@ -47,6 +47,9 @@ public class Ball {
     public void setVelocity(float[] vel){
         velocity = vel;
     }
+    public float[] getVelocity(){
+        return velocity;
+    }
 
 
 

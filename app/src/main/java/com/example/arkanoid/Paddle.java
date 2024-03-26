@@ -33,8 +33,14 @@ public class Paddle {
     public void setMovementState(int state){
         paddleMoving = state;
     }
+    public int getMovementState(){
+        return paddleMoving;
+    }
     public void setSpeed(float s){
         speed = s;
+    }
+    public float getSpeed(){
+        return speed;
     }
 
     public void update(long fps){
