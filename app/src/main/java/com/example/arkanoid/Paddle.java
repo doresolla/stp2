@@ -17,7 +17,7 @@ public class Paddle {
     public final int RIGHT = 2;
     private int paddleMoving = STOPPED;
     public Paddle(int screenX, int screenY){
-        len = 130;
+        len = 200;
         height = 20;
         x = screenX / 2;
         y = screenY - 20;

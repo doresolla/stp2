@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
                     canvas.drawText("Победа!", screenX/2, screenY/2, paint);
                   //  canvas.drawText("YOU HAVE WON!", 10, screenY / 2, paint);
                 }
-                else if (lives == 0){
+                else if (lives <= 0){
                     paint.setTextSize(50);
                     paint.setColor(Color.BLACK);
                     canvas.drawText("Проигрыш", screenX/2, screenY/2, paint);
@@ -146,21 +146,6 @@ public class MainActivity extends AppCompatActivity {
                 // Draw everything to the screen
                 holder.unlockCanvasAndPost(canvas);
             }
-        }
-
-        public void pause(){
-            playing = false;
-            try{
-                gameThread.join();
-            } catch (InterruptedException e) {
-                Log.e("Error: ", "joining thread");
-            }
-        }
-
-        public void resume(){
-            playing = true;
-            gameThread = new Thread(this);
-            gameThread.start();
         }
 
         @SuppressLint("ClickableViewAccessibility")
@@ -204,7 +189,6 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
         }
-
         final Handler handler = new Handler();
         Runnable mLongPressed = new Runnable() {
             public void run() {
@@ -216,7 +200,6 @@ public class MainActivity extends AppCompatActivity {
         private void update() {
             pad.update(fps);
             ball.update(fps);
-            int padMov = pad.getMovementState();
             float[] new_velocity = ball.getVelocity();
             float[] old_velocity = ball.getVelocity();
 
@@ -224,31 +207,38 @@ public class MainActivity extends AppCompatActivity {
                 if (bricks[i].getVisibility()) {
                     if (RectF.intersects(bricks[i].getRect(), ball.getRect())) {
                         bricks[i].setInvisible();
-                        ball.reverseYVelocity();
+                        new_velocity[1] = -new_velocity[1];
                         score = score + 10;
                     }
                 }
             }
 
-
             if (RectF.intersects(pad.getRect(), ball.getRect())) {
-                ball.setRandomXVelocity();
-                ball.reverseYVelocity();
-                //   TODO ПРОВЕРИТЬ      ball.moveY(pad.getRect().top - 2);
-            }
-
-            if (pad.getRect().top == ball.getRect().bottom) {
-                if (padMov == pad.STOPPED){
-                    ball.reverseYVelocity();
-                }
-                else if(padMov == pad.LEFT){
+                if(pad.getMovementState() == pad.LEFT){
                     new_velocity[0] = old_velocity[0] - pad.getSpeed();
-                    new_velocity[1] = -new_velocity[1];
                 }
-          //   TODO ПРОВЕРИТЬ     ball.moveY(pad.getRect().top - 2);
+                else if(pad.getMovementState() == pad.RIGHT){
+                    new_velocity[0] = old_velocity[0] + pad.getSpeed();
+                }
+                new_velocity[1] = -new_velocity[1];
+                ball.moveY(pad.getRect().top - 2);
             }
 
-
+//            if (pad.getRect().top >= ball.getRect().bottom) {
+//                if (pad.getMovementState() == pad.STOPPED){
+//                    new_velocity[1] = - new_velocity[1];
+//           //         ball.reverseYVelocity();
+//                }
+//                else if(pad.getMovementState() == pad.LEFT){
+//                    new_velocity[0] = old_velocity[0] - pad.getSpeed();
+//                    new_velocity[1] = -new_velocity[1];
+//                }
+//                else if(pad.getMovementState() == pad.RIGHT){
+//                    new_velocity[0] = old_velocity[0] + pad.getSpeed();
+//                    new_velocity[1] = -new_velocity[1];
+//                }
+//                ball.moveY(pad.getRect().top - 2);
+//            }
 
             if (ball.getRect().bottom >= screenY) {
                 lives -= 1;
@@ -257,60 +247,77 @@ public class MainActivity extends AppCompatActivity {
 
                 // проиграл ли пользователь
                 if (lives <= 0) {
-                    paint.setTextSize(50);
-                    canvas.drawText("YOU HAVE LOST!", 20, 50, paint);
+                   // paint.setTextSize(50);
+                   // canvas.drawText("YOU HAVE LOST!", 20, 50, paint);
                     ball.reset(screenX, screenY);
-                    ball.reverseYVelocity();
+             //       new_velocity[1] = -new_velocity[1];
+                //    ball.reverseYVelocity();
                   //  createBricksAndRestart();
-                    paused = true;
+                //    paused = true;
                 }
                 //сброс состояния мяча
                 else{
                     ball.reset(screenX, screenY);
-                    ball.reverseYVelocity();
-                    //   TODO ПРОВЕРИТЬ        ball.moveY(screenY - 2);
+                    new_velocity[1] = -new_velocity[1];
+                  //  ball.reverseYVelocity();
+                    ball.moveY(screenY - 2);
                 }
             }
-            if (ball.getRect().bottom == pad.getRect().top){
-//                ball.reset(screenX, screenY);
-//                ball.reverseYVelocity();
-            }
+
 
             // Bounce the ball back when it hits the top of screen
-            if (ball.getRect().top < 0)
-            {
-                ball.reverseYVelocity();
-                //   TODO ПРОВЕРИТЬ       ball.moveY(12);
+            if (ball.getRect().top < 0) {
+                new_velocity[1] = -new_velocity[1];
+          //      ball.reverseYVelocity();
+                ball.moveY(12);
             }
 
             // If the ball hits left wall bounce
-            if (ball.getRect().left < 0)
-            {
-                ball.reverseXVelocity();
-                //   TODO ПРОВЕРИТЬ   ball.moveX(2);
+            if (ball.getRect().left < 0) {
+                ball.setDefaultVelocity();
+                new_velocity[0] = -new_velocity[0];
+            //    ball.reverseXVelocity();
+                ball.moveX(2);
             }
 
             // If the ball hits right wall bounce
             if (ball.getRect().right > screenX - 10) {
-
-                ball.reverseXVelocity();
-                //   TODO ПРОВЕРИТЬ         ball.moveX(screenX - 22);
+                new_velocity[0] = -new_velocity[0];
+           //     ball.reverseXVelocity();
+                ball.moveX(screenX - 22);
             }
             // Pause if cleared screen
             if (score == numBricks * 10)
             {
-                paused = true;
+             //   paused = true;
                 createBricksAndRestart();
             }
             if (pad.getRect().right > screenX - 10){
                 pad.setMovementState(pad.LEFT);
                 pad.setMovementState(pad.STOPPED);
             }
-            if (pad.getRect().left < 0){
+            if (pad.getRect().left < 10){
                 pad.setMovementState(pad.RIGHT);
+                pad.setMovementState(pad.STOPPED);
+            }
+            ball.setVelocity(new_velocity);
+        }
+        public void pause(){
+            playing = false;
+            try{
+                gameThread.join();
+            } catch (InterruptedException e) {
+                Log.e("Error: ", "joining thread");
             }
         }
+        public void resume(){
+            playing = true;
+            gameThread = new Thread(this);
+            gameThread.start();
+        }
+
     }
+
 
     @Override
     protected void onResume(){

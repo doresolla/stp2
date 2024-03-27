@@ -7,16 +7,13 @@ import java.util.Random;
 public class Ball {
     private RectF ball;
     float[] velocity = new float[2];
-    float xVelocity;
-    float yVelocity;
+    float[] defVelocity = new float[2];
     float ballWidth = 15;
     float ballHeight = 15;
 
     public Ball(){
-        velocity[0]= 200;
-        velocity[1] = -400;
-//        xVelocity = 200;
-//        yVelocity = -400;
+        setRandomVelocity();
+        defVelocity = velocity;
         ball = new RectF();
     }
 
@@ -24,8 +21,8 @@ public class Ball {
         return ball;
     }
     public void update(long fps){
-        ball.left = ball.left + (xVelocity / fps);
-        ball.top = ball.top + (yVelocity / fps);
+        ball.left = ball.left + (velocity[0] / fps);
+        ball.top = ball.top + (velocity[1] / fps);
         ball.right = ball.left + ballWidth;
         ball.bottom = ball.top - ballHeight;
     }
@@ -34,15 +31,25 @@ public class Ball {
   //      xVelocity = - xVelocity;
     }
 
-    public void reverseYVelocity(){
-        velocity[1] = -velocity[1];
-//        yVelocity = - yVelocity;
-    }
-    public void setRandomXVelocity(){
-        Random generator = new Random();
-        int answer = generator.nextInt(2);
-        if (answer == 0)
-            reverseXVelocity();
+    public void setRandomVelocity(){
+        float[] xRange = new float[3];
+        xRange[0] = 100;
+        xRange[1] = 200;
+        xRange[2] = 300;
+        float[] yRange = new float[4];
+        yRange[0] = -200;
+        yRange[1] = 200;
+        yRange[2] = -400;
+        yRange[3] = 400;
+        velocity[0]= 200;
+        velocity[1] = -400;
+
+        Random generatorx = new Random();
+        Random generatory = new Random();
+        velocity[0] = xRange[generatorx.nextInt(3)];
+        velocity[1] = xRange[generatory.nextInt(4)];
+
+
     }
     public void setVelocity(float[] vel){
         velocity = vel;
@@ -68,5 +75,11 @@ public class Ball {
         ball.top = y - 20;
         ball.right = x / 2 + ballWidth;
         ball.bottom = y - 20 - ballHeight;
+        setDefaultVelocity();
+    }
+
+    public void setDefaultVelocity(){
+        velocity[0] = 200;
+        velocity[1] = -400;
     }
 }
