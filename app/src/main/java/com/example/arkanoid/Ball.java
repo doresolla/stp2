@@ -7,14 +7,15 @@ import java.util.Random;
 public class Ball {
     private RectF ball;
     float[] velocity = new float[2];
-    float[] defVelocity = new float[2];
-    float ballWidth = 15;
-    float ballHeight = 15;
+    static float[] defVelocity;
+    float ballWidth = 30;
+    float ballHeight = 30;
 
-    public Ball(){
+    public Ball(int x, int y){
         setRandomVelocity();
         defVelocity = velocity;
         ball = new RectF();
+        reset(x, y);
     }
 
     public RectF getRect(){
@@ -25,10 +26,6 @@ public class Ball {
         ball.top = ball.top + (velocity[1] / fps);
         ball.right = ball.left + ballWidth;
         ball.bottom = ball.top - ballHeight;
-    }
-    public void reverseXVelocity(){
-        velocity[0] = -velocity[0];
-  //      xVelocity = - xVelocity;
     }
 
     public void setRandomVelocity(){
@@ -41,15 +38,11 @@ public class Ball {
         yRange[1] = 200;
         yRange[2] = -400;
         yRange[3] = 400;
-        velocity[0]= 200;
-        velocity[1] = -400;
 
         Random generatorx = new Random();
         Random generatory = new Random();
         velocity[0] = xRange[generatorx.nextInt(3)];
-        velocity[1] = xRange[generatory.nextInt(4)];
-
-
+        velocity[1] = yRange[generatory.nextInt(4)];
     }
     public void setVelocity(float[] vel){
         velocity = vel;
@@ -57,8 +50,6 @@ public class Ball {
     public float[] getVelocity(){
         return velocity;
     }
-
-
 
     public void moveY(float y){
         ball.bottom = y;
@@ -71,15 +62,14 @@ public class Ball {
     }
 
     public  void reset(int x, int y){
-        ball.left = x /2;
-        ball.top = y - 20;
-        ball.right = x / 2 + ballWidth;
-        ball.bottom = y - 20 - ballHeight;
-        setDefaultVelocity();
+        ball.left = (x - ballWidth) / 2;
+        ball.top = y - 10 - 30;
+        ball.right = (x + ballWidth) / 2 ;
+        ball.bottom = y - 10 -  ballHeight - 30;
     }
 
     public void setDefaultVelocity(){
-        velocity[0] = 200;
-        velocity[1] = -400;
+        velocity[0] = defVelocity[0];
+        velocity[1] = defVelocity[1];
     }
 }

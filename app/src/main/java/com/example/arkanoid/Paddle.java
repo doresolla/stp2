@@ -1,10 +1,5 @@
 package com.example.arkanoid;
-
-
-import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.drawable.shapes.RoundRectShape;
-
 public class Paddle {
     private RectF rect;
     private float len;
@@ -18,11 +13,11 @@ public class Paddle {
     private int paddleMoving = STOPPED;
     public Paddle(int screenX, int screenY){
         len = 200;
-        height = 20;
-        x = screenX / 2;
-        y = screenY - 20;
+        height = 50;
+        x = (screenX - len)/2;
+        y = screenY - height;
         //float[] outR = new float[]{5,5,5,5,5,5,5,5};
-        rect = new RectF(x, y, x+len, y+height);
+        rect = new RectF(x, y, x+len, screenY);
         speed = 400;
     }
 

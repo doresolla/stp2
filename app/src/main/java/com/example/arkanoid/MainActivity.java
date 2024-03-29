@@ -34,10 +34,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(view);
     }
-
     class AppView extends SurfaceView implements Runnable{
         Thread gameThread = null;
-        float pad_speed = 1;
         SurfaceHolder holder;
         volatile boolean playing;
         boolean paused = true;
@@ -70,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d("SCREEN X ", screenX +"");
             Log.d("SCREEN Y ", screenY+"");
             pad = new Paddle(screenX, screenY);
-            ball = new Ball();
+            ball = new Ball(screenX, screenY);
             createBricksAndRestart();
         }
 
@@ -112,10 +110,10 @@ public class MainActivity extends AppCompatActivity {
         private void draw() {
             if(holder.getSurface().isValid()){
                 canvas = holder.lockCanvas();
-                canvas.drawColor(Color.BLACK); //цвет фона
+                canvas.drawColor(Color.WHITE); //цвет фона
                 paint.setColor(Color.BLUE);
                 canvas.drawRect(pad.getRect(), paint); //каретка голубого цвета
-                paint.setColor(Color.YELLOW);
+                paint.setColor(Color.MAGENTA);
                 canvas.drawOval(ball.getRect(), paint); //мяч желтого цвета
 
                 // Draw the bricks if visible
@@ -136,7 +134,6 @@ public class MainActivity extends AppCompatActivity {
                     paint.setTextSize(50);
                     paint.setColor(Color.BLUE);
                     canvas.drawText("Победа!", screenX/2, screenY/2, paint);
-                  //  canvas.drawText("YOU HAVE WON!", 10, screenY / 2, paint);
                 }
                 else if (lives <= 0){
                     paint.setTextSize(50);
@@ -154,7 +151,6 @@ public class MainActivity extends AppCompatActivity {
         private float mDownY;
         private final float SCROLL_THRESHOLD = 10;
         public boolean isOnClick;
-
         @Override
         public boolean onTouchEvent(MotionEvent ev ) {
             switch (ev.getAction() & MotionEvent.ACTION_MASK) {
@@ -213,93 +209,74 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+            //столкновение мяча и каретки
             if (RectF.intersects(pad.getRect(), ball.getRect())) {
                 if(pad.getMovementState() == pad.LEFT){
-                    new_velocity[0] = old_velocity[0] - pad.getSpeed();
+                    new_velocity[0] = old_velocity[0] - pad.getSpeed() / 2;
                 }
                 else if(pad.getMovementState() == pad.RIGHT){
-                    new_velocity[0] = old_velocity[0] + pad.getSpeed();
+                    new_velocity[0] = old_velocity[0] + pad.getSpeed() / 2;
                 }
                 new_velocity[1] = -new_velocity[1];
                 ball.moveY(pad.getRect().top - 2);
             }
 
-//            if (pad.getRect().top >= ball.getRect().bottom) {
-//                if (pad.getMovementState() == pad.STOPPED){
-//                    new_velocity[1] = - new_velocity[1];
-//           //         ball.reverseYVelocity();
-//                }
-//                else if(pad.getMovementState() == pad.LEFT){
-//                    new_velocity[0] = old_velocity[0] - pad.getSpeed();
-//                    new_velocity[1] = -new_velocity[1];
-//                }
-//                else if(pad.getMovementState() == pad.RIGHT){
-//                    new_velocity[0] = old_velocity[0] + pad.getSpeed();
-//                    new_velocity[1] = -new_velocity[1];
-//                }
-//                ball.moveY(pad.getRect().top - 2);
-//            }
 
             if (ball.getRect().bottom >= screenY) {
+                Log.d("Bottom",ball.getRect().top + " " + ball.getRect().left + " " + ball.getRect().bottom + " " + ball.getRect().right);
                 lives -= 1;
                 paint.setTextSize(40);
                 canvas.drawText("Score: " + score + "   Lives: " + lives, 10, 50, paint);
 
                 // проиграл ли пользователь
                 if (lives <= 0) {
-                   // paint.setTextSize(50);
-                   // canvas.drawText("YOU HAVE LOST!", 20, 50, paint);
                     ball.reset(screenX, screenY);
-             //       new_velocity[1] = -new_velocity[1];
-                //    ball.reverseYVelocity();
-                  //  createBricksAndRestart();
-                //    paused = true;
+                    paused = true;
                 }
                 //сброс состояния мяча
                 else{
                     ball.reset(screenX, screenY);
                     new_velocity[1] = -new_velocity[1];
-                  //  ball.reverseYVelocity();
                     ball.moveY(screenY - 2);
                 }
             }
 
-
-            // Bounce the ball back when it hits the top of screen
+            // мяч ударился о потолок
             if (ball.getRect().top < 0) {
+                Log.d("Top",ball.getRect().top + " " + ball.getRect().left + " " + ball.getRect().bottom + " " + ball.getRect().right);
                 new_velocity[1] = -new_velocity[1];
-          //      ball.reverseYVelocity();
                 ball.moveY(12);
             }
 
-            // If the ball hits left wall bounce
+            // мяч ударился о левую стенку
             if (ball.getRect().left < 0) {
-                ball.setDefaultVelocity();
+                Log.d("Left",ball.getRect().top + " " + ball.getRect().left + " " + ball.getRect().bottom + " " + ball.getRect().right);
+  //              ball.setDefaultVelocity();
                 new_velocity[0] = -new_velocity[0];
-            //    ball.reverseXVelocity();
                 ball.moveX(2);
             }
-
-            // If the ball hits right wall bounce
-            if (ball.getRect().right > screenX - 10) {
+            // мяч ударился о правую стенку
+            if (ball.getRect().right > screenX - 20) {
+                Log.d("Right",ball.getRect().top + " " + ball.getRect().left + " " + ball.getRect().bottom + " " + ball.getRect().right);
                 new_velocity[0] = -new_velocity[0];
-           //     ball.reverseXVelocity();
-                ball.moveX(screenX - 22);
+                ball.moveX(screenX - 42);
             }
-            // Pause if cleared screen
-            if (score == numBricks * 10)
-            {
+            // все блоки удалены
+            if (score == numBricks * 10) {
              //   paused = true;
                 createBricksAndRestart();
             }
+            //каретка достигла правого края экрана
             if (pad.getRect().right > screenX - 10){
                 pad.setMovementState(pad.LEFT);
                 pad.setMovementState(pad.STOPPED);
             }
+            //каретка достигла левого края экрана
             if (pad.getRect().left < 10){
                 pad.setMovementState(pad.RIGHT);
                 pad.setMovementState(pad.STOPPED);
             }
+            //изменение направления движения после столкновения мяча с кареткой
             ball.setVelocity(new_velocity);
         }
         public void pause(){
@@ -315,16 +292,12 @@ public class MainActivity extends AppCompatActivity {
             gameThread = new Thread(this);
             gameThread.start();
         }
-
     }
-
-
     @Override
     protected void onResume(){
         super.onResume();
         view.resume();
     }
-
     @Override
     protected void onPause() {
         super.onPause();
