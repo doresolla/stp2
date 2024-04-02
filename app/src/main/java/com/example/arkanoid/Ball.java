@@ -8,8 +8,8 @@ public class Ball {
     private RectF ball;
     float[] velocity = new float[2];
     static float[] defVelocity;
-    float ballWidth = 30;
-    float ballHeight = 30;
+    float ballWidth = 20;
+    float ballHeight = 20;
 
     public Ball(int x, int y){
         setRandomVelocity();

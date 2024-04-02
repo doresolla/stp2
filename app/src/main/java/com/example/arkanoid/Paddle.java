@@ -1,9 +1,8 @@
 package com.example.arkanoid;
 import android.graphics.RectF;
 public class Paddle {
-    private RectF rect;
-    private float len;
-    private float height;
+    private final RectF rect;
+    private final float len;
     private float x;
     private float y;
     private float speed;
@@ -13,12 +12,12 @@ public class Paddle {
     private int paddleMoving = STOPPED;
     public Paddle(int screenX, int screenY){
         len = 200;
-        height = 50;
+        float height = 20;
         x = (screenX - len)/2;
         y = screenY - height;
         //float[] outR = new float[]{5,5,5,5,5,5,5,5};
         rect = new RectF(x, y, x+len, screenY);
-        speed = 400;
+        speed = 500;
     }
 
     public RectF getRect(){

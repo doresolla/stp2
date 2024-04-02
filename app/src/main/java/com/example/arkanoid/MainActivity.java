@@ -116,6 +116,8 @@ public class MainActivity extends AppCompatActivity {
                 paint.setColor(Color.MAGENTA);
                 canvas.drawOval(ball.getRect(), paint); //мяч желтого цвета
 
+
+
                 // Draw the bricks if visible
                 for (int i = 0; i < numBricks; i++) {
                     if (bricks[i].getVisibility()) {
@@ -189,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
         Runnable mLongPressed = new Runnable() {
             public void run() {
                 Log.i("", "Long press!");
-                pad.setSpeed(500);
+                pad.setSpeed(700);
             }
         };
 
@@ -199,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
             float[] new_velocity = ball.getVelocity();
             float[] old_velocity = ball.getVelocity();
 
+            //столкновение с блоками
             for (int i = 0; i < numBricks; i++) {
                 if (bricks[i].getVisibility()) {
                     if (RectF.intersects(bricks[i].getRect(), ball.getRect())) {
@@ -222,30 +225,27 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
+            //мяч коснулся нижней стороны
             if (ball.getRect().bottom >= screenY) {
-                Log.d("Bottom",ball.getRect().top + " " + ball.getRect().left + " " + ball.getRect().bottom + " " + ball.getRect().right);
                 lives -= 1;
-                paint.setTextSize(40);
-                canvas.drawText("Score: " + score + "   Lives: " + lives, 10, 50, paint);
+                //сброс состояния мяча
+                ball.reset(screenX, screenY);
+                new_velocity[1] = -new_velocity[1];
+                ball.moveY(screenY - 2);
 
                 // проиграл ли пользователь
                 if (lives <= 0) {
-                    ball.reset(screenX, screenY);
                     paused = true;
+                    createBricksAndRestart();
                 }
-                //сброс состояния мяча
-                else{
-                    ball.reset(screenX, screenY);
-                    new_velocity[1] = -new_velocity[1];
-                    ball.moveY(screenY - 2);
-                }
+
             }
 
             // мяч ударился о потолок
             if (ball.getRect().top < 0) {
                 Log.d("Top",ball.getRect().top + " " + ball.getRect().left + " " + ball.getRect().bottom + " " + ball.getRect().right);
                 new_velocity[1] = -new_velocity[1];
-                ball.moveY(12);
+                ball.moveY(ball.ballHeight + 2);
             }
 
             // мяч ударился о левую стенку
@@ -256,10 +256,10 @@ public class MainActivity extends AppCompatActivity {
                 ball.moveX(2);
             }
             // мяч ударился о правую стенку
-            if (ball.getRect().right > screenX - 20) {
+            if (ball.getRect().right > screenX - ball.ballWidth) {
                 Log.d("Right",ball.getRect().top + " " + ball.getRect().left + " " + ball.getRect().bottom + " " + ball.getRect().right);
                 new_velocity[0] = -new_velocity[0];
-                ball.moveX(screenX - 42);
+                ball.moveX(screenX - ball.ballWidth - 12);
             }
             // все блоки удалены
             if (score == numBricks * 10) {
