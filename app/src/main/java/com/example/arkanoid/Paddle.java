@@ -1,22 +1,19 @@
 package com.example.arkanoid;
 import android.graphics.RectF;
 public class Paddle {
-    private final RectF rect;
-    private final float len;
+    private RectF rect;
+    private float len;
+    public float height = 50 ;
     private float x;
-    private float y;
     private float speed;
     public final int STOPPED = 0;
     public final int LEFT = 1;
     public final int RIGHT = 2;
     private int paddleMoving = STOPPED;
-    public Paddle(int screenX, int screenY){
+    public Paddle(){
         len = 200;
-        float height = 20;
-        x = (screenX - len)/2;
-        y = screenY - height;
-        //float[] outR = new float[]{5,5,5,5,5,5,5,5};
-        rect = new RectF(x, y, x+len, screenY);
+        x = (MainActivity.screenX - len)/2;
+        rect = new RectF(x,  MainActivity.screenY - height, x+len,  MainActivity.screenY );
         speed = 500;
     }
 
@@ -37,6 +34,12 @@ public class Paddle {
         return speed;
     }
 
+    public void reset(){
+        x = (MainActivity.screenX - len) / 2;
+        rect.left = x;
+        rect.right = x + len;
+
+    }
     public void update(long fps){
         if (paddleMoving == LEFT)
             x = x - speed / fps;

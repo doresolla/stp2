@@ -18,10 +18,20 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.ViewConfiguration;
+import android.widget.Toast;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
     AppView view;
     static int screenX, screenY;
+    Timer timer_win;
+    Timer timer_lost;
+    boolean show_win = false;
+    boolean show_lost = false;
+    Canvas canvas;
+
 
     @Override
     public boolean supportRequestWindowFeature(int featureId) {
@@ -32,23 +42,44 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         view = new AppView(this);
         super.onCreate(savedInstanceState);
+//        Paint paint1 = new Paint();
+//        paint1.setColor(Color.BLACK);
+//        timer_win.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                Toast toast = Toast.makeText(getApplicationContext(), "Победа", Toast.LENGTH_SHORT);
+//                toast.show();
+////                if (show_win){
+////                    show_win=false;
+////                    canvas.drawText("Победа!", screenX/2, screenY/2, paint1);
+////                }
+//            }
+//        }, 0, 5000);
+//
+//        timer_lost.schedule(new TimerTask() {
+//                                @Override
+//                                public void run() {
+//                                    Toast toast = Toast.makeText(getApplicationContext(), "Проигрыш", Toast.LENGTH_SHORT);
+//                                    toast.show();
+//                                }
+//                            },        0, 11000);
         setContentView(view);
     }
+
+
+
     class AppView extends SurfaceView implements Runnable{
         Thread gameThread = null;
         SurfaceHolder holder;
         volatile boolean playing;
         boolean paused = true;
-        Canvas canvas;
         Paint paint;
         long fps;
         private long timeThisFrame;
 
         Paddle pad;
         Ball ball;
-        // The score
         int score = 0;
-        // Lives
         int lives = 3;
         Brick[] bricks = new Brick[200];
         int numBricks = 0;
@@ -59,7 +90,8 @@ public class MainActivity extends AppCompatActivity {
             super(context);
             holder = getHolder();
             paint = new Paint();
-
+            timer_win = new Timer();
+            timer_lost = new Timer();
             Display display = getWindowManager().getDefaultDisplay();
             Point size = new Point();
             display.getSize(size);
@@ -67,18 +99,26 @@ public class MainActivity extends AppCompatActivity {
             screenY = size.y;
             Log.d("SCREEN X ", screenX +"");
             Log.d("SCREEN Y ", screenY+"");
-            pad = new Paddle(screenX, screenY);
-            ball = new Ball(screenX, screenY);
+            pad = new Paddle();
+            ball = new Ball();
             createBricksAndRestart();
+
         }
 
+
+
+
         public void createBricksAndRestart() {
+            show_lost = false;
+            show_win = false;
+     //       paused = false;
 
             // Put the ball back to the start
-            ball.reset(screenX, screenY);
+            ball.reset();
+            pad.reset();
 
             int brickWidth = screenX / 8;
-            int brickHeight = screenY / 10;
+            int brickHeight = screenY / 15;
 
             // Build a wall of bricks
             numBricks = 0;
@@ -116,8 +156,6 @@ public class MainActivity extends AppCompatActivity {
                 paint.setColor(Color.MAGENTA);
                 canvas.drawOval(ball.getRect(), paint); //мяч желтого цвета
 
-
-
                 // Draw the bricks if visible
                 for (int i = 0; i < numBricks; i++) {
                     if (bricks[i].getVisibility()) {
@@ -127,20 +165,28 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 // Choose the brush color for drawing
-                paint.setColor(Color.argb(255, 255, 255, 255));
+                paint.setColor(Color.BLACK);
                 // Draw the score
                 paint.setTextSize(40);
                 canvas.drawText("Score: " + score + "   Lives: " + lives, 10, 50, paint);
                 // Has the player cleared the screen?
                 if (score == numBricks * 10) {
                     paint.setTextSize(50);
-                    paint.setColor(Color.BLUE);
+                    paint.setColor(Color.BLACK);
+                    show_win = true;
+                    show_lost = false;
                     canvas.drawText("Победа!", screenX/2, screenY/2, paint);
+
+                 //   paused = true;
                 }
+
                 else if (lives <= 0){
                     paint.setTextSize(50);
                     paint.setColor(Color.BLACK);
                     canvas.drawText("Проигрыш", screenX/2, screenY/2, paint);
+                  //  paused = true;
+                    show_lost = true;
+                    show_win = false;
                 }
                 // Draw everything to the screen
                 holder.unlockCanvasAndPost(canvas);
@@ -161,8 +207,11 @@ public class MainActivity extends AppCompatActivity {
                     mDownX = ev.getX();
                     mDownY = ev.getY();
                     isOnClick = true;
+
                     Log.d("Debug: ", "Action was DOWN");
+
                     paused = false;
+                //    playing = true;
                     if(ev.getX() > screenX / 2)
                         pad.setMovementState(pad.RIGHT);
                     else
@@ -226,26 +275,31 @@ public class MainActivity extends AppCompatActivity {
 
 
             //мяч коснулся нижней стороны
-            if (ball.getRect().bottom >= screenY) {
+            if (ball.getRect().bottom > screenY) {
                 lives -= 1;
                 //сброс состояния мяча
-                ball.reset(screenX, screenY);
+                ball.reset();
+                paint.setTextSize(40);
+//                paint.setColor(Color.BLACK);
+//                canvas.drawText("Score: " + score + "   Lives: " + lives, 10, 50, paint);
                 new_velocity[1] = -new_velocity[1];
                 ball.moveY(screenY - 2);
 
                 // проиграл ли пользователь
                 if (lives <= 0) {
                     paused = true;
+                    show_lost = true;
                     createBricksAndRestart();
                 }
 
             }
 
             // мяч ударился о потолок
-            if (ball.getRect().top < 0) {
-                Log.d("Top",ball.getRect().top + " " + ball.getRect().left + " " + ball.getRect().bottom + " " + ball.getRect().right);
+            if (ball.getRect().top <= 0) {
+            //    Log.d("Top",ball.getRect().top + " " + ball.getRect().left + " " + ball.getRect().bottom + " " + ball.getRect().right);
                 new_velocity[1] = -new_velocity[1];
-                ball.moveY(ball.ballHeight + 2);
+                ball.moveY(ball.radius + 2);
+               // ball.moveY(12);
             }
 
             // мяч ударился о левую стенку
@@ -256,14 +310,14 @@ public class MainActivity extends AppCompatActivity {
                 ball.moveX(2);
             }
             // мяч ударился о правую стенку
-            if (ball.getRect().right > screenX - ball.ballWidth) {
+            if (ball.getRect().right > screenX - 10) {
                 Log.d("Right",ball.getRect().top + " " + ball.getRect().left + " " + ball.getRect().bottom + " " + ball.getRect().right);
                 new_velocity[0] = -new_velocity[0];
-                ball.moveX(screenX - ball.ballWidth - 12);
+                ball.moveX(screenX - 42);
             }
             // все блоки удалены
             if (score == numBricks * 10) {
-             //   paused = true;
+                paused = true;
                 createBricksAndRestart();
             }
             //каретка достигла правого края экрана
@@ -289,6 +343,16 @@ public class MainActivity extends AppCompatActivity {
         }
         public void resume(){
             playing = true;
+          //  paused = false;
+//            paint.setColor(Color.WHITE);
+//            if (show_win){
+//                canvas.drawText("Победа", screenX/2, screenY/2, paint);
+//                show_win = false;
+//            }
+//            else if (show_lost){
+//                canvas.drawText("Проигрыш!", screenX/2, screenY/2, paint);
+//                show_lost = false;
+//            }
             gameThread = new Thread(this);
             gameThread.start();
         }
