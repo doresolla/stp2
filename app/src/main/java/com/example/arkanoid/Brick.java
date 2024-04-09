@@ -4,8 +4,8 @@ import android.graphics.Color;
 import android.graphics.RectF;
 
 public class Brick {
-    public RectF rect;
-    public int rectColor;
+    private RectF rect;
+    private int rectColor;
     private boolean isVisible;
     public boolean isTouched;
     public boolean isEnhanced;
@@ -32,7 +32,6 @@ public class Brick {
     }
     public void setTouched(){
         isTouched = true;
-//        rectColor = Color.argb(255, 128,128,128);
         rectColor = Color.GRAY;
     }
 

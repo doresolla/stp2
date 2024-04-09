@@ -28,7 +28,7 @@ public class Ball {
         ball.bottom = ball.top - radius;
     }
 
-    public void setRandomVelocity(){
+    void setRandomVelocity(){
         float[] xRange = new float[3];
         xRange[0] = 100;
         xRange[1] = 200;
@@ -43,8 +43,6 @@ public class Ball {
         Random generatory = new Random();
         velocity[0] = xRange[generatorx.nextInt(3)];
         velocity[1] = yRange[generatory.nextInt(4)];
-        velocity[0] = 200;
-        velocity[1]=-400;
 
     }
     public void setVelocity(float[] vel){
@@ -67,15 +65,9 @@ public class Ball {
     public  void reset(){
         ball.left = (MainActivity.screenX - radius) / 2;
         Paddle pad = new Paddle();
-       ball.top = MainActivity.screenY - pad.height - radius -1;
-       // ball.top = MainActivity.screenY - 10 - radius;
+        ball.top = MainActivity.screenY - pad.height - radius -1;
         ball.right = (MainActivity.screenX + radius) / 2 ;
         ball.bottom = MainActivity.screenY - pad.height - 1;
-     //   ball.bottom = MainActivity.screenY - radius - 30 - 10;
     }
 
-    public void setDefaultVelocity(){
-        velocity[0] = defVelocity[0];
-        velocity[1] = defVelocity[1];
-    }
 }

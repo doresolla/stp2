@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         boolean paused = true;
         Paint paint;
         long fps;
-        private long timeThisFrame;
+        long timeThisFrame;
         Paddle pad;
         Ball ball;
         int score = 0;
@@ -65,7 +65,10 @@ public class MainActivity extends AppCompatActivity {
 
 
         public AppView(Context context){
+
             super(context);
+            gameThread = new Thread(this);
+            gameThread.start();
             holder = getHolder();
             paint = new Paint();
             Display display = getWindowManager().getDefaultDisplay();
@@ -79,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
             ball = new Ball();
             createBricksAndRestart();
             runTimer();
-
         }
 
         int mSecs = 0;
@@ -91,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run(){
                     int seconds = mSecs % 60;
-                    int minutes = mSecs/3600%60;
+                    int minutes = mSecs / 3600 % 60;
                     int hours = mSecs / 3600;
                     time = String.format("%d:%02d:%02d", hours, minutes, seconds);
                     if (!paused)
@@ -105,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        public void createBricksAndRestart() {
+        private void createBricksAndRestart() {
             show_lost = false;
             show_win = false;
             // Put the ball back to the start
@@ -173,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
                     show_lost = false;
                     canvas.drawText("Победа!", screenX/2, screenY/2, paint);
 
-                 //   paused = true;
+                    paused = true;
                 }
 
                 else if (lives <= 0){
@@ -207,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("Debug: ", "Action was DOWN");
 
                     paused = false;
-                //    playing = true;
+                    playing = true;
                     if(ev.getX() > screenX / 2)
                         pad.setMovementState(pad.RIGHT);
                     else

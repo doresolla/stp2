@@ -11,7 +11,7 @@ public class Paddle {
     public final int RIGHT = 2;
     private int paddleMoving = STOPPED;
     public Paddle(){
-        len = 200;
+        len = 300;
         x = (MainActivity.screenX - len)/2;
         rect = new RectF(x,  MainActivity.screenY - height, x+len,  MainActivity.screenY );
         speed = 500;
