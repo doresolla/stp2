@@ -26,11 +26,10 @@ import java.util.TimerTask;
 public class MainActivity extends AppCompatActivity {
     AppView view;
     static int screenX, screenY;
-    Timer timer_win;
-    Timer timer_lost;
+    public static Brick[] bricks = new Brick[200];
     boolean show_win = false;
     boolean show_lost = false;
-    Canvas canvas;
+
 
 
     @Override
@@ -42,27 +41,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         view = new AppView(this);
         super.onCreate(savedInstanceState);
-//        Paint paint1 = new Paint();
-//        paint1.setColor(Color.BLACK);
-//        timer_win.schedule(new TimerTask() {
-//            @Override
-//            public void run() {
-//                Toast toast = Toast.makeText(getApplicationContext(), "Победа", Toast.LENGTH_SHORT);
-//                toast.show();
-////                if (show_win){
-////                    show_win=false;
-////                    canvas.drawText("Победа!", screenX/2, screenY/2, paint1);
-////                }
-//            }
-//        }, 0, 5000);
-//
-//        timer_lost.schedule(new TimerTask() {
-//                                @Override
-//                                public void run() {
-//                                    Toast toast = Toast.makeText(getApplicationContext(), "Проигрыш", Toast.LENGTH_SHORT);
-//                                    toast.show();
-//                                }
-//                            },        0, 11000);
         setContentView(view);
     }
 
@@ -76,13 +54,13 @@ public class MainActivity extends AppCompatActivity {
         Paint paint;
         long fps;
         private long timeThisFrame;
-
         Paddle pad;
         Ball ball;
         int score = 0;
         int lives = 3;
-        Brick[] bricks = new Brick[200];
+
         int numBricks = 0;
+        Canvas canvas;
 
 
 
@@ -90,8 +68,6 @@ public class MainActivity extends AppCompatActivity {
             super(context);
             holder = getHolder();
             paint = new Paint();
-            timer_win = new Timer();
-            timer_lost = new Timer();
             Display display = getWindowManager().getDefaultDisplay();
             Point size = new Point();
             display.getSize(size);
@@ -102,17 +78,36 @@ public class MainActivity extends AppCompatActivity {
             pad = new Paddle();
             ball = new Ball();
             createBricksAndRestart();
+            runTimer();
 
         }
 
+        int mSecs = 0;
+        String time;
 
+        private void runTimer(){
+            Handler timer = new Handler();
+            timer.post(new Runnable(){
+                @Override
+                public void run(){
+                    int seconds = mSecs % 60;
+                    int minutes = mSecs/3600%60;
+                    int hours = mSecs / 3600;
+                    time = String.format("%d:%02d:%02d", hours, minutes, seconds);
+                    if (!paused)
+                        mSecs ++;
+                    else{
+                        mSecs = 0;
+                    }
+                    timer.postDelayed(this, 1000);
+                }
+            });
+        }
 
 
         public void createBricksAndRestart() {
             show_lost = false;
             show_win = false;
-     //       paused = false;
-
             // Put the ball back to the start
             ball.reset();
             pad.reset();
@@ -125,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
             int[] colors = new int[]{Color.RED, Color.YELLOW, Color.GREEN};
             for (int column = 0; column < 8; column++) {
                 for (int row = 0; row < 3; row++) {
-                    bricks[numBricks] = new Brick(row, column, brickWidth, brickHeight,colors[row]);
+                    bricks[numBricks] = new Brick(row, column, brickWidth, brickHeight,colors[row],  row == 2);
                     numBricks++;
                 }
             }
@@ -133,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
             if (lives == 0) {
                 score = 0;
                 lives = 3;
+                time = "0:00:00";
             }
         }
         @Override
@@ -168,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
                 paint.setColor(Color.BLACK);
                 // Draw the score
                 paint.setTextSize(40);
-                canvas.drawText("Score: " + score + "   Lives: " + lives, 10, 50, paint);
+                canvas.drawText("Score: " + score + "   Lives: " + lives + "  Time: " + time , 10, 50, paint);
                 // Has the player cleared the screen?
                 if (score == numBricks * 10) {
                     paint.setTextSize(50);
@@ -254,7 +250,12 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < numBricks; i++) {
                 if (bricks[i].getVisibility()) {
                     if (RectF.intersects(bricks[i].getRect(), ball.getRect())) {
-                        bricks[i].setInvisible();
+                        if (bricks[i].isEnhanced)
+                            if (bricks[i].isTouched)
+                                bricks[i].setInvisible();
+                            else bricks[i].setTouched();
+                        else
+                            bricks[i].setInvisible();
                         new_velocity[1] = -new_velocity[1];
                         score = score + 10;
                     }
@@ -291,27 +292,21 @@ public class MainActivity extends AppCompatActivity {
                     show_lost = true;
                     createBricksAndRestart();
                 }
-
             }
 
             // мяч ударился о потолок
             if (ball.getRect().top <= 0) {
-            //    Log.d("Top",ball.getRect().top + " " + ball.getRect().left + " " + ball.getRect().bottom + " " + ball.getRect().right);
                 new_velocity[1] = -new_velocity[1];
                 ball.moveY(ball.radius + 2);
-               // ball.moveY(12);
             }
 
             // мяч ударился о левую стенку
             if (ball.getRect().left < 0) {
-                Log.d("Left",ball.getRect().top + " " + ball.getRect().left + " " + ball.getRect().bottom + " " + ball.getRect().right);
-  //              ball.setDefaultVelocity();
                 new_velocity[0] = -new_velocity[0];
                 ball.moveX(2);
             }
             // мяч ударился о правую стенку
             if (ball.getRect().right > screenX - 10) {
-                Log.d("Right",ball.getRect().top + " " + ball.getRect().left + " " + ball.getRect().bottom + " " + ball.getRect().right);
                 new_velocity[0] = -new_velocity[0];
                 ball.moveX(screenX - 42);
             }
@@ -332,6 +327,7 @@ public class MainActivity extends AppCompatActivity {
             }
             //изменение направления движения после столкновения мяча с кареткой
             ball.setVelocity(new_velocity);
+
         }
         public void pause(){
             playing = false;
@@ -343,16 +339,6 @@ public class MainActivity extends AppCompatActivity {
         }
         public void resume(){
             playing = true;
-          //  paused = false;
-//            paint.setColor(Color.WHITE);
-//            if (show_win){
-//                canvas.drawText("Победа", screenX/2, screenY/2, paint);
-//                show_win = false;
-//            }
-//            else if (show_lost){
-//                canvas.drawText("Проигрыш!", screenX/2, screenY/2, paint);
-//                show_lost = false;
-//            }
             gameThread = new Thread(this);
             gameThread.start();
         }
